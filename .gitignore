@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# build output
+.next/
+out/
+next-env.d.ts
+
+# generated data: rebuilt by `npm run data:build` before every dev/build
+public/data/
+
+# secrets — .env.example is the committed template
+.env
+.env.local
+.env.*.local
+
+# misc
+.DS_Store
+*.log
+
+# sync-base-matrix writes this as the PR body
+base-matrix-summary.md
+
+# TypeScript incremental build info
+*.tsbuildinfo
