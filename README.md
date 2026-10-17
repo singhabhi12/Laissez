@@ -1,4 +1,4 @@
-# Visa Unlock
+# Laissez
 
 What your passport opens, once you count the visas and residence permits you
 already hold.
