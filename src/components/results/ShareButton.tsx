@@ -12,7 +12,7 @@ export function ShareButton({ passport, documents }: { passport: string; documen
     const url = window.location.href;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "My travel power · Visa Unlock", url });
+        await navigator.share({ title: "My travel power · Laissez", url });
         events.shareClicked({ passport, documents, method: "share_sheet" });
         return;
       } catch {

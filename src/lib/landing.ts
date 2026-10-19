@@ -3,7 +3,32 @@ import type { PresetDocument } from "./documents";
 import type { TravelPower } from "./unlock";
 import { withArticle, withArticleCapitalised } from "./article";
 
-export const SITE_URL = (process.env["NEXT_PUBLIC_SITE_URL"] ?? "https://laissez.example").replace(/\/$/, "");
+/**
+ * The absolute origin for canonicals, Open Graph URLs and the sitemap.
+ *
+ * 1. NEXT_PUBLIC_SITE_URL, if set. Set it for Production only (see DEPLOY.md).
+ * 2. On Vercel production: the project's production domain.
+ * 3. On Vercel previews: that preview's own URL, so its share cards and links
+ *    point at the preview rather than at production.
+ * 4. Locally: a placeholder.
+ *
+ * Server-only. VERCEL_* variables are not exposed to the browser, and nothing
+ * client-side imports this.
+ */
+export function resolveSiteUrl(env: Record<string, string | undefined> = process.env): string {
+  const explicit = env["NEXT_PUBLIC_SITE_URL"];
+  if (explicit) return explicit.replace(/\/$/, "");
+  if (env["VERCEL_ENV"] === "production" && env["VERCEL_PROJECT_PRODUCTION_URL"]) {
+    return `https://${env["VERCEL_PROJECT_PRODUCTION_URL"]}`;
+  }
+  if (env["VERCEL_URL"]) return `https://${env["VERCEL_URL"]}`;
+  return "https://laissez.example";
+}
+
+export const SITE_URL = resolveSiteUrl();
+
+/** Only production should be indexed; previews and local builds should not. */
+export const INDEXABLE = !process.env["VERCEL_ENV"] || process.env["VERCEL_ENV"] === "production";
 /** The year shown in landing page titles. */
 export const DATA_YEAR = 2026;
 

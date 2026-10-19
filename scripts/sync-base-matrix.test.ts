@@ -62,9 +62,9 @@ describe("sync-base-matrix script", () => {
     expect(r.summary).toBeUndefined();
   }, 60_000);
 
-  // Regression: writing the Zod-parsed object stamped `last_verified` into all
-  // 118 rules and buried real changes in a whole-file diff.
-  it("changes only the edited cells and the download date", async () => {
+  // Regression: writing the Zod-parsed object stamped schema defaults into every
+  // rule and buried real changes in a whole-file diff.
+  it("changes only the edited cells", async () => {
     const r = await sync(csvFrom(matrix, { "IND-THA": "visa required", "NGA-GBR": "e-visa" }));
     expect(r.outputs).toContain("changes=true");
     expect(r.outputs).toContain("changed_pairs=2");
@@ -73,12 +73,19 @@ describe("sync-base-matrix script", () => {
     const after = r.after.split("\n");
     expect(after).toHaveLength(before.length);
     const changed = before.flatMap((line, i) => (line === after[i] ? [] : [after[i]!.trim()]));
-    expect(changed).toHaveLength(3);
-    expect(changed.some((l) => /downloaded \d{4}-\d{2}-\d{2}/.test(l))).toBe(true);
+    // base_matrix_source carries no "downloaded <date>" stamp to bump, so the
+    // two cells are the whole diff.
+    expect(changed).toHaveLength(2);
     expect(changed).toContain('"THA": "visa required",');
     expect(changed).toContain('"GBR": "e-visa",');
 
-    expect(r.after).not.toContain('"last_verified"');
+    // Everything outside base_matrix (meta, rules, apply) is untouched.
+    const rest = (json: string) => {
+      const o = JSON.parse(json) as Record<string, unknown>;
+      delete o["base_matrix"];
+      return o;
+    };
+    expect(rest(r.after)).toEqual(rest(r.before));
     expect(r.after.endsWith("\n")).toBe(r.before.endsWith("\n"));
     expect(r.summary).toContain("| Changed pairs | 2 |");
   }, 60_000);

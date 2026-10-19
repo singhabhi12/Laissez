@@ -20,7 +20,7 @@ interface Props {
   initialDocs: string | undefined;
   initialDate: string | undefined;
   initialShard: PassportFile;
-  rules: RulesFile;
+  rules: Pick<RulesFile, "rules" | "territory_rules">;
 }
 
 const labelFor = (gain: PresetGain) =>

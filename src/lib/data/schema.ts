@@ -20,7 +20,7 @@ import { z } from "zod";
  *   of issuers x types, and issuers may be group codes that need expanding.
  */
 
-export const DEFAULT_LAST_VERIFIED = "2026-10-16";
+export const DEFAULT_LAST_VERIFIED = "2026-10-19";
 
 /** ISO 3166-1 alpha-3, or a group/pseudo code such as SCHENGEN, EU, ANY. */
 export const CodeSchema = z.string().regex(/^[A-Z][A-Z0-9_]{1,14}$/, "expected an upper-case ISO3 or group code");
@@ -124,6 +124,20 @@ export const CoverageSchema = z
   })
   .strict();
 
+/** How a traveller applies for entry to one destination, and its official portal. */
+export const ApplyInfoSchema = z
+  .object({
+    how_to_apply: z.string().min(1),
+    /** Absent where no official online page could be found. */
+    official_url: UrlSchema.startsWith("https://").optional(),
+    /** Set when the link was opened and checked by hand on that date. */
+    confirmed_on: IsoDateSchema.optional(),
+  })
+  .strict();
+
+/** destination iso3 -> how to apply. */
+export const ApplySchema = z.record(Iso3Schema, ApplyInfoSchema);
+
 export const DatasetSchema = z
   .object({
     meta: MetaSchema,
@@ -134,6 +148,7 @@ export const DatasetSchema = z
     territory_rules: z.array(TerritoryRuleSchema),
     warnings: z.array(WarningSchema),
     coverage: CoverageSchema,
+    apply: ApplySchema,
   })
   .strict();
 
@@ -152,4 +167,5 @@ export type Rule = z.infer<typeof RuleSchema>;
 export type TerritoryRule = z.infer<typeof TerritoryRuleSchema>;
 export type Warning = z.infer<typeof WarningSchema>;
 export type Coverage = z.infer<typeof CoverageSchema>;
+export type ApplyInfo = z.infer<typeof ApplyInfoSchema>;
 export type Dataset = z.infer<typeof DatasetSchema>;

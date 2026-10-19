@@ -3,4 +3,4 @@ export const DISCLAIMER =
   "Not legal advice. Airlines decide boarding using IATA Timatic. Check the official source before you book.";
 
 export const BASE_MATRIX_CREDIT =
-  "Base matrix: passport-index-dataset by ilyankou (MIT licence).";
+  "Base matrix: passport-index-data by imorte (MIT licence), with Laissez corrections.";

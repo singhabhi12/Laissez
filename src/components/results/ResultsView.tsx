@@ -309,6 +309,7 @@ export function ResultsView({
             : undefined
         }
         warning={selected ? warningsByDest[selected] : undefined}
+        apply={selected ? rules.apply[selected] : undefined}
         isHome={selected === passport}
         passport={passport}
         documents={docs}

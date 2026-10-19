@@ -4,7 +4,11 @@ Guidance for Claude Code when working in this repository.
 
 ## Product summary
 
-**Visa Unlock** (repo name: "Laissez") answers one question: *what does your passport
+**The product is called Laissez, and only Laissez.** "Visa Unlock" was a Lovable-era
+placeholder; never use it in UI, metadata, docs or code. (`data/visa-unlock-dataset.json`
+keeps its name: it is the dataset's filename, set by the owner, and describes the data.)
+
+**Laissez** answers one question: *what does your passport
 actually open, once you count the visas and residence permits you already hold?*
 
 Many countries waive their own visa for someone who holds a valid US visa, a Schengen
@@ -181,6 +185,37 @@ These are hard constraints. Follow them unless the user explicitly says otherwis
    unlock in the UI without a path to that source. The "not legal advice / airlines
    decide boarding / check the official source" disclaimer stays.
 
+## Production (Vercel)
+
+Deployment steps live in `DEPLOY.md`. What matters when changing code:
+
+- **CSP allows `'unsafe-inline'` scripts, deliberately.** A nonce-based CSP forces every
+  page to render dynamically and would remove static generation from all 2189 landing
+  pages. Everything else is locked to `'self'`. If you add a third-party origin (a font,
+  an embed, an API), the CSP in `next.config.ts` will block it until you list it.
+  Vercel Toolbar origins are added on preview deployments only.
+- **Never render theme-dependent markup from `useTheme()`.** next-themes resolves the
+  theme synchronously on the client, which the server cannot know, so every
+  dark-mode visitor got a hydration mismatch and the whole document was re-rendered.
+  `ThemeToggle` now picks its icon *and* accessible name with `dark:` CSS variants.
+  Do the same for anything else that depends on the theme.
+- `SITE_URL` comes from `resolveSiteUrl()`: `NEXT_PUBLIC_SITE_URL`, then the Vercel
+  production domain, then the preview's own `VERCEL_URL`. Previews are `noindex`
+  (`robots.ts` plus an `X-Robots-Tag` header).
+- `<Analytics />` renders only when `VERCEL` is set; `/_vercel/insights` does not exist
+  elsewhere.
+- `images.unoptimized` is on because nothing uses `next/image`. Turn it off if that
+  changes.
+- `outputFileTracingIncludes` lists `public/data` for every route that reads it at
+  request time. Without it, a refactor of `load.server.ts` could drop the files from
+  the deployed functions and fail only in production.
+- Error boundaries use Next 16's `retry()` (re-fetch then re-render), not `reset()`, and
+  receive `error: unknown`; read the digest via `errorDigest()`.
+- Icons are generated from one geometric "L" in `scripts/generate-icons.tsx`
+  (`npm run icons:build`) and committed. The full wordmark is illegible at 16-32 px.
+- `scripts/` is in `tsconfig.json`'s `include`. It was not before, so the scripts were
+  never type-checked; keep it there.
+
 ## CI and data upkeep
 
 `ci.yml` order matters: `data:build` must run before `test`, because the tests read the
@@ -193,9 +228,19 @@ It **fails** on `valid_until` in the past, and **warns** on expiring within 30 d
 simulates a date. As of 2026-10-17, `IRL-1` (2026-10-31) and `NZL-2` (2026-11-02) are
 about to expire: CI goes red on 2026-11-01 unless they are updated.
 
+Also on the watch list from the 2026-10-19 data update (no data change yet):
+Montenegro plans visas for RUS, BLR, CHN, SAU and TUR from 2026-11-01 (pending the
+Official Gazette), and South Africa's eTA becomes mandatory around 2026-11-01.
+
+**The sync's monthly schedule is off.** On 2026-10-19 the base matrix moved to
+imorte's passport-index-data (17 Feb 2026) plus 927 hand-researched corrections
+(`NEW DATA/laissez-patch-2026-10-19.json` lists every cell with its source). The
+sync still pulls ilyankou's CSV and would revert them, so it runs only on
+`workflow_dispatch` until a new upstream and a way to keep corrections exist.
+
 `scripts/sync-base-matrix.ts` wraps `src/lib/base-matrix-diff.ts`. It writes back the
 **raw** JSON object, never the Zod-parsed one — parsing applies schema defaults, which
-would stamp `last_verified` into all 118 rules and bury the real change in a whole-file
+would stamp schema defaults into every rule and bury the real change in a whole-file
 diff. It also matches the source formatting exactly (one-space indent, no trailing
 newline). `scripts/sync-base-matrix.test.ts` runs the real script against an in-process
 HTTP server and asserts only the edited lines change; it fails if that bug comes back.
@@ -298,7 +343,7 @@ passport's shard as `next_visa` (with `next_visa_as_of`). 2189 engine runs, ~370
 
 `/next-visa` uses the stored ranking when no documents are held **and** no `?date=`
 is given. Otherwise it ranks in the browser, scoring each preset by what it adds *on
-top of* the documents already held — so a Schengen visa drops from +63 to +36 once a
+top of* the documents already held — so a Schengen visa drops from +64 to +36 once a
 US visa is in hand, and presets already held disappear from the list.
 
 Both paths call the same `rankPresets` in `src/lib/next-visa.ts`, and
@@ -313,7 +358,7 @@ that one rule until the next build. Passing `?date=` always recomputes.
 ## Unlock logic
 
 `src/lib/unlock.ts` is the single engine. `computeTravelPower(passport, held,
-travelDate, data)` is pure — the dataset is a parameter so the 965 kB source never
+travelDate, data)` is pure — the dataset is a parameter so the 973 kB source never
 reaches a bundle. `withDataset(data)` binds it and returns the plain
 `(passport, held, travelDate)` signature.
 
@@ -332,7 +377,7 @@ The UI must never reimplement any of this; screens read `TravelPower` and render
 ### A date boundary that moves the numbers
 
 `UZB-1` has `valid_from: 2026-09-01`. For an Indian passport with US, UK and
-Schengen visas, easy access is **125 before** that date and **126 on or after** it,
+Schengen visas, easy access is **121 before** that date and **122 on or after** it,
 Uzbekistan being the only destination that differs. `unlock.test.ts` pins both.
 Any golden number quoted without a travel date is ambiguous because of this.
 
@@ -342,7 +387,7 @@ One dataset, validated at build time and sharded for the browser. The mock data
 that used to live in `src/data` is gone, as is `src/lib/unlock.mock.ts`.
 
 ```
-data/visa-unlock-dataset.json   SINGLE SOURCE OF TRUTH, 965 kB, never shipped to the browser
+data/visa-unlock-dataset.json   SINGLE SOURCE OF TRUTH, 973 kB, never shipped to the browser
 src/lib/data/schema.ts          Zod schemas + inferred types for every section
 src/lib/data/iso.ts             iso3 -> [iso2, region] for all 199 countries; flagEmoji()
 src/lib/data/enrich.ts          Region/EnrichedCountry types, normaliseBase(), REQUIREMENT_RANK
@@ -352,7 +397,7 @@ scripts/build-data.ts           validates, then shards into public/data
 public/data/                    GENERATED - do not edit
   countries.json                21 kB: iso3 -> name, iso2, numeric, region, flag emoji
   iso-numeric.json              2 kB: ISO numeric -> iso3 for the map, plus a name fallback
-  rules.json                    62 kB: rules, territory_rules, warnings, groups, coverage
+  rules.json                    80 kB: rules, territory_rules, warnings, groups, coverage, apply
   passports/{ISO3}.json         199 files, <6 kB each: base requirements + next-visa ranking
 ```
 
@@ -360,7 +405,7 @@ public/data/                    GENERATED - do not edit
 requested passport's shard from disk and passes them to a client view inside
 `<DataProvider>`. When the visitor switches passport the client fetches just that
 shard from `/data/passports/{ISO3}.json` and caches it, so a switch costs one
-request under 5 kB. The 965 kB source is never served; `/data/visa-unlock-dataset.json`
+request under 5 kB. The 973 kB source is never served; `/data/visa-unlock-dataset.json`
 is a 404.
 
 `npm run data:build` runs automatically before both `dev` and `build`. It exits
@@ -390,8 +435,14 @@ Normalised base requirements (`normaliseBase`): a day count or `"visa free"` ->
 `home`. Note the UI's five-value `Status` has no `no_admission` or `home`, which is
 one reason the two data sets are not yet joined.
 
-Every rule carries `last_verified`, defaulted by the schema to `2026-10-16`
+Every rule carries `last_verified`, defaulted by the schema to `2026-10-19`
 (the dataset's `meta.researched_on`).
+
+`apply` maps every destination to `how_to_apply`, an optional https `official_url`
+and an optional `confirmed_on` (the date the link was checked by hand).
+`CountryDetail` shows it as "How to apply" unless the final status is visa free,
+home or no admission (`applyInfoFor` in `src/lib/apply.ts`). Only `/results`
+receives it; `/next-visa` is passed just the rules.
 
 Quirks the validator accepts on purpose: the `SCH-ATV` rule's `dest` is the group code
 `SCHENGEN` rather than a country, and `issuers` may contain the pseudo-codes `ANY` and

@@ -16,7 +16,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { p, d, date } = validateTravelSearch(await searchParams);
   const query = travelQuery({ passport: p, docs: parseDocs(d), date });
-  const title = "Your travel power · Visa Unlock";
+  const title = "Your travel power · Laissez";
   return {
     title,
     description,

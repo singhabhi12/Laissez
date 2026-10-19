@@ -5,6 +5,8 @@
     "src/**/*.tsx",
     "app/**/*.ts",
     "app/**/*.tsx",
+    "scripts/**/*.tsx",
+    "scripts/**/*.ts",
     ".next/types/**/*.ts",
     "vitest.config.ts",
     "next.config.ts",

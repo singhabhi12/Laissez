@@ -14,6 +14,11 @@ npm run dev
 
 Then open http://localhost:3000.
 
+## Deploying
+
+See **[DEPLOY.md](DEPLOY.md)** for Vercel: connecting the repo, environment variables,
+the custom domain, and how preview deployments behave.
+
 ## Environment variables
 
 Copy `.env.example` to `.env.local`. The app runs without any of them; only
@@ -21,7 +26,7 @@ Copy `.env.example` to `.env.local`. The app runs without any of them; only
 
 | Variable | Required | What it does |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | no | Absolute origin for canonical URLs, OG image URLs and `sitemap.xml`. Defaults to `https://laissez.example`, so set it before deploying. |
+| `NEXT_PUBLIC_SITE_URL` | recommended in production | Absolute origin for canonical URLs, OG image URLs and `sitemap.xml`. On Vercel it falls back to the production domain (production) or the preview's own URL (previews); locally to `https://laissez.example`. Set it for **Production only**. |
 | `GITHUB_TOKEN` | for reports | Fine-grained token with **Issues: read and write** on `GITHUB_REPO`. Server-side only. |
 | `GITHUB_REPO` | for reports | `owner/repo` that receives reports, as issues labelled `data-report`. |
 
@@ -49,7 +54,8 @@ Build-only overrides, both optional:
 | `npm run typecheck` | Generate route types, then `tsc --noEmit` |
 | `npm run lint` | ESLint |
 | `npm run format` | Prettier |
-| `npm run test` | Vitest (pure logic in `src/lib`) |
+| `npm run test` | Vitest (pure logic in `src/lib`, plus the data scripts) |
+| `npm run icons:build` | Regenerate the favicon, Apple touch icon and manifest icons |
 
 ## Continuous integration
 
@@ -68,17 +74,21 @@ The freshness step runs last because it fails on the calendar, not on code. It w
 start failing on its own when a rule expires — that is the point. Fix it by updating or
 removing the rule in `data/visa-unlock-dataset.json`.
 
-## Monthly base matrix sync
+## Base matrix sync (manual)
 
-`.github/workflows/sync-base-matrix.yml` runs at 06:00 UTC on the 1st of each month
-(and on demand from the Actions tab). It downloads the latest
+The base matrix is [passport-index-data](https://github.com/imorte/passport-index-data)
+by imorte (scraped 17 Feb 2026) plus Laissez corrections researched to 19 Oct 2026.
+
+`.github/workflows/sync-base-matrix.yml` used to run monthly. **Its schedule is off**:
+it still compares against ilyankou's dataset, so a scheduled run would open a PR
+reverting the corrections. It can still be started from the Actions tab. It downloads the latest
 [passport-index-dataset](https://github.com/ilyankou/passport-index-dataset) tidy ISO3
 CSV, compares it with `base_matrix`, and if anything changed opens a pull request
 labelled `data-sync` whose description lists every changed passport and destination
 pair. Run it locally with `npm run data:sync`.
 
-It only ever touches `base_matrix` and the download date in `meta`; the rules are left
-alone, and the file's formatting is preserved so the PR diff shows only data.
+It only ever touches `base_matrix` (and a "downloaded" date in `meta`, if there is one);
+the rules are left alone, and the file's formatting is preserved so the PR diff shows only data.
 
 **Set a `SYNC_TOKEN` secret.** A pull request opened with the default `GITHUB_TOKEN`
 does not trigger other workflows, so CI would never run on the sync PR. A fine-grained
@@ -87,7 +97,7 @@ fixes that. Without it the workflow still opens the PR, but you have to start CI
 yourself.
 
 Expect the sync PR's tests to fail when the data genuinely moves: golden counts such as
-"India, no documents: 58 easy-access destinations" are pinned to the current matrix.
+"India, no documents: 54 easy-access destinations" are pinned to the current matrix.
 Update them as part of reviewing the change.
 
 ## Built with

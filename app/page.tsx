@@ -13,9 +13,9 @@ const description =
   "See which countries your passport plus your visas and residence permits open.";
 
 export const metadata: Metadata = {
-  title: "Visa Unlock · What's your real travel power?",
+  title: "Laissez · What's your real travel power?",
   description,
-  openGraph: { title: "Visa Unlock · What's your real travel power?", description, type: "website" },
+  openGraph: { title: "Laissez · What's your real travel power?", description, type: "website" },
 };
 
 export default function HomePage() {

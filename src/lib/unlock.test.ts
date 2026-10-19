@@ -5,6 +5,7 @@ import { DatasetSchema, type BaseRequirement } from "./data/schema";
 import { normaliseBase } from "./data/enrich";
 import {
   computeTravelPower,
+  findMatchingDocument,
   withDataset,
   type HeldDocument,
   type TravelPower,
@@ -55,16 +56,16 @@ const GREEN_CARD: HeldDocument = { issuer: "USA", type: "permanent_residence" };
 const at = (r: TravelPower, dest: string) => r.destinations.find((x) => x.dest === dest)!;
 
 describe("computeTravelPower — golden cases", () => {
-  it("India with no documents has 58 easy-access destinations", () => {
+  it("India with no documents has 54 easy-access destinations", () => {
     const r = power("IND", [], TODAY);
-    expect(r.easyAccess.withDocs).toBe(58);
+    expect(r.easyAccess.withDocs).toBe(54);
     expect(r.newEasyAccess).toHaveLength(0);
     expect(r.unlocked).toBe(0);
     // No documents, so nothing can be upgraded away from the base.
-    expect(r.easyAccess.base).toBe(58);
+    expect(r.easyAccess.base).toBe(54);
   });
 
-  it("India + US visa unlocks Mexico, Uzbekistan and the Philippines, 31 new easy access", () => {
+  it("India + US visa unlocks Mexico and Uzbekistan, 31 new easy access", () => {
     const r = power("IND", [US_VISA], TODAY);
 
     expect(at(r, "MEX").withDocs).toBe("visa_free");
@@ -75,27 +76,28 @@ describe("computeTravelPower — golden cases", () => {
     expect(at(r, "UZB").rule?.id).toBe("UZB-1");
     expect(at(r, "UZB").rule?.max_stay_days).toBe(30);
 
+    // Indians are visa free in the Philippines in the base matrix (14 days), so
+    // PHL-1's 30 days does not outrank it and is not counted as an unlock.
+    expect(at(r, "PHL").base).toBe("visa_free");
     expect(at(r, "PHL").withDocs).toBe("visa_free");
-    expect(at(r, "PHL").rule?.id).toBe("PHL-1");
-    expect(at(r, "PHL").rule?.max_stay_days).toBe(30);
+    expect(at(r, "PHL").unlocked).toBe(false);
 
     expect(r.newEasyAccess).toHaveLength(31);
   });
 
   /**
-   * The stated expectation of 125 holds only before UZB-1 activates on
-   * 2026-09-01; on or after that date Uzbekistan is also easy access, making
-   * 126. Both dates are pinned so the boundary cannot regress silently.
+   * 121 holds only before UZB-1 activates on 2026-09-01; on or after that
+   * date Uzbekistan is also easy access, making 122. Both dates are pinned so the boundary cannot regress silently.
    */
-  it("India + US, UK and Schengen visas: 125 easy access before UZB-1, 126 after", () => {
+  it("India + US, UK and Schengen visas: 121 easy access before UZB-1, 122 after", () => {
     const held = [US_VISA, UK_VISA, SCHENGEN_VISA];
 
     const before = power("IND", held, BEFORE_UZB);
-    expect(before.easyAccess.withDocs).toBe(125);
+    expect(before.easyAccess.withDocs).toBe(121);
     expect(at(before, "UZB").unlocked).toBe(false);
 
     const after = power("IND", held, TODAY);
-    expect(after.easyAccess.withDocs).toBe(126);
+    expect(after.easyAccess.withDocs).toBe(122);
     expect(at(after, "UZB").rule?.id).toBe("UZB-1");
 
     // Uzbekistan is the only destination that differs between the two dates.
@@ -149,6 +151,27 @@ describe("computeTravelPower — golden cases", () => {
     // own rule when the document is that very country's.
     const deu = power("NGA", [{ issuer: "DEU", type: "visa" }], TODAY);
     expect(at(deu, "DEU").unlocked).toBe(false);
+  });
+
+  it("a Schengen residence permit matches only rules that accept every Schengen state", () => {
+    const permit: HeldDocument[] = [{ issuer: "SCHENGEN", type: "residence_permit" }];
+    const rule = (id: string) => dataset.rules.find((r) => r.id === id)!;
+    const matches = (id: string) => findMatchingDocument(rule(id), permit, dataset.groups) !== undefined;
+
+    // Names the group itself.
+    expect(matches("ALB-1")).toBe(true);
+    // Lists all 29 members one by one (GEO-1), or covers them as EEA + CHE (GBR-2).
+    expect(matches("GEO-1")).toBe(true);
+    expect(matches("GBR-2")).toBe(true);
+    // EU + ISL + NOR + CHE leaves out Liechtenstein; EU alone leaves out four.
+    expect(matches("CRI-1")).toBe(false);
+    expect(matches("ARE-1")).toBe(false);
+  });
+
+  it("a Schengen residence permit unlocks far more than the EU group code does", () => {
+    const schengen = power("IND", [{ issuer: "SCHENGEN", type: "residence_permit" }], TODAY);
+    const eu = power("IND", [{ issuer: "EU", type: "residence_permit" }], TODAY);
+    expect(schengen.unlocked).toBeGreaterThan(eu.unlocked * 5);
   });
 });
 

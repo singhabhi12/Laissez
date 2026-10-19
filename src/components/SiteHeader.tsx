@@ -18,7 +18,7 @@ export function SiteHeader() {
     <header className="glass sticky top-0 z-40 border-b border-border">
       <div className="mx-auto flex h-14 max-w-[1280px] items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex h-11 items-center text-[19px] font-semibold tracking-tight">
-          Visa Unlock
+          Laissez
         </Link>
         <nav className="flex items-center" aria-label="Main">
           {NAV.map((item) => (

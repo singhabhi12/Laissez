@@ -109,6 +109,9 @@ function checkReferences(data: Dataset): void {
   for (const w of data.warnings) {
     if (!codes.has(w.dest)) problems.push(`warnings: unknown dest ${w.dest}`);
   }
+  for (const dest of Object.keys(data.apply)) {
+    if (!codes.has(dest)) problems.push(`apply.${dest}: unknown destination`);
+  }
 
   if (problems.length) {
     fail(`${problems.length} reference error(s)`, problems.slice(0, 40));
@@ -119,7 +122,7 @@ function checkReferences(data: Dataset): void {
 const DEMONYM_OVERRIDES: Record<string, string> = { XKX: "Kosovan" };
 
 const demonymByIso3 = new Map(
-  worldCountries.map((c) => [c.cca3, c.demonyms?.eng?.m ?? ""] as const),
+  worldCountries.map((c) => [c.cca3, c.demonyms?.["eng"]?.m ?? ""] as const),
 );
 
 function enrichCountries(data: Dataset): Record<string, EnrichedCountry> {
@@ -262,6 +265,7 @@ function main(): void {
     territory_rules: data.territory_rules,
     warnings: data.warnings,
     coverage: data.coverage,
+    apply: data.apply,
   });
 
   const sourceBytes = Buffer.byteLength(readFileSync(SOURCE));

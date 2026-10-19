@@ -4,10 +4,10 @@ import Link from "next/link";
 const description = "Three steps to see what your passport and documents really open.";
 
 export const metadata: Metadata = {
-  title: "How it works · Visa Unlock",
+  title: "How it works · Laissez",
   description,
   alternates: { canonical: "/how-it-works" },
-  openGraph: { title: "How it works · Visa Unlock", description, type: "website" },
+  openGraph: { title: "How it works · Laissez", description, type: "website" },
 };
 
 const steps = [

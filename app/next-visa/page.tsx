@@ -10,10 +10,10 @@ const description =
   "Which visa or residence permit would open the most countries for your passport.";
 
 export const metadata: Metadata = {
-  title: "Next best visa · Visa Unlock",
+  title: "Next best visa · Laissez",
   description,
   alternates: { canonical: "/next-visa" },
-  openGraph: { title: "Next best visa · Visa Unlock", description, type: "website" },
+  openGraph: { title: "Next best visa · Laissez", description, type: "website" },
 };
 
 export default async function NextVisaPage({
@@ -42,7 +42,7 @@ export default async function NextVisaPage({
         initialDocs={d}
         initialDate={date}
         initialShard={shard}
-        rules={shared.rules}
+        rules={{ rules: shared.rules.rules, territory_rules: shared.rules.territory_rules }}
       />
     </DataProvider>
   );

@@ -1,5 +1,5 @@
 {
-  "name": "visa-unlock",
+  "name": "laissez",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "data:build": "tsx scripts/build-data.ts",
     "data:freshness": "tsx scripts/check-freshness.ts",
-    "data:sync": "tsx scripts/sync-base-matrix.ts"
+    "data:sync": "tsx scripts/sync-base-matrix.ts",
+    "icons:build": "tsx scripts/generate-icons.tsx"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
@@ -86,5 +87,8 @@
     "typescript-eslint": "^8.56.1",
     "vitest": "^4.1.10",
     "world-countries": "^5.1.0"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

@@ -16,7 +16,8 @@ import type {
  *   2. keep rules active on travelDate (valid_from / valid_until);
  *   3. keep rules whose nat matches the passport ({list} or {all, except});
  *   4. a held document matches a doc spec when its issuer is in the expanded
- *      issuer list and its type is listed, where permanent_residence also
+ *      issuer list (a held group code needs the group or all of its members)
+ *      and its type is listed, where permanent_residence also
  *      satisfies residence_permit, and documents issued by the destination
  *      itself are ignored;
  *   5. upgrade only when the grant outranks the base;
@@ -117,6 +118,17 @@ function expandIssuers(issuers: readonly string[], groups: Groups): Set<string> 
   return out;
 }
 
+/**
+ * A held group document (e.g. a SCHENGEN residence permit) could have been
+ * issued by any member, so it only matches when the rule accepts every one of
+ * them: the group code itself, or all its members listed or implied.
+ */
+function issuerAccepted(issuer: string, accepted: ReadonlySet<string>, groups: Groups): boolean {
+  if (accepted.has(issuer)) return true;
+  const members = groups[issuer];
+  return members !== undefined && members.length > 0 && members.every((m) => accepted.has(m));
+}
+
 export function findMatchingDocument(
   rule: Rule | TerritoryRule,
   held: readonly HeldDocument[],
@@ -131,7 +143,7 @@ export function findMatchingDocument(
         spec.types.includes(doc.type) ||
         (doc.type === "permanent_residence" && spec.types.includes("residence_permit"));
       if (!typeOk) continue;
-      if (expandIssuers(spec.issuers, groups).has(doc.issuer)) return doc;
+      if (issuerAccepted(doc.issuer, expandIssuers(spec.issuers, groups), groups)) return doc;
     }
   }
   return undefined;

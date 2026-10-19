@@ -10,7 +10,8 @@ import { useDocLabel } from "@/components/DocumentPicker";
 import { confidenceText } from "@/lib/status";
 import { DISCLAIMER } from "@/lib/legal";
 import { events } from "@/lib/analytics";
-import type { Warning } from "@/lib/data/schema";
+import { applyInfoFor } from "@/lib/apply";
+import type { ApplyInfo, Warning } from "@/lib/data/schema";
 import type { DestinationResult, HeldDocument } from "@/lib/unlock";
 import { ReportProblem } from "@/components/results/ReportProblem";
 
@@ -20,12 +21,14 @@ const fmt = (iso: string) =>
 function Body({
   r,
   warning,
+  apply,
   isHome,
   passport,
   documents,
 }: {
   r: DestinationResult;
   warning?: Warning | undefined;
+  apply?: ApplyInfo | undefined;
   isHome: boolean;
   passport: string;
   documents: readonly HeldDocument[];
@@ -33,6 +36,7 @@ function Body({
   const rule = r.rule;
   const { lastVerified, country } = useData();
   const docLabel = useDocLabel();
+  const howToApply = applyInfoFor(r.withDocs, apply);
 
   return (
     <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-6">
@@ -138,6 +142,22 @@ function Body({
         )
       )}
 
+      {howToApply && (
+        <section className="rounded-xl bg-grouped p-4">
+          <h3 className="mb-1 font-semibold">How to apply</h3>
+          <p className="text-[15px] text-muted-foreground">{howToApply.how_to_apply}</p>
+          {howToApply.official_url && (
+            <a href={howToApply.official_url} target="_blank" rel="noreferrer" className="mt-1 inline-flex min-h-11 items-center gap-2 text-link hover:underline">
+              {new URL(howToApply.official_url).hostname.replace(/^www\./, "")}
+              <ExternalLink className="size-3.5" aria-hidden />
+            </a>
+          )}
+          {howToApply.confirmed_on && (
+            <p className="text-caption text-muted-foreground">Link checked {fmt(howToApply.confirmed_on)}</p>
+          )}
+        </section>
+      )}
+
       <footer className="flex flex-col gap-3 pt-2 text-caption text-muted-foreground">
         {!isHome && (
           <ReportProblem
@@ -158,6 +178,7 @@ function Body({
 export function CountryDetail({
   result,
   warning,
+  apply,
   isHome = false,
   passport,
   documents,
@@ -165,6 +186,7 @@ export function CountryDetail({
 }: {
   result?: DestinationResult | undefined;
   warning?: Warning | undefined;
+  apply?: ApplyInfo | undefined;
   isHome?: boolean;
   passport: string;
   documents: readonly HeldDocument[];
@@ -187,7 +209,7 @@ export function CountryDetail({
             <DrawerDescription className="sr-only">Entry details</DrawerDescription>
           </DrawerHeader>
           {result && (
-            <Body r={result} warning={warning} isHome={isHome} passport={passport} documents={documents} />
+            <Body r={result} warning={warning} apply={apply} isHome={isHome} passport={passport} documents={documents} />
           )}
         </DrawerContent>
       </Drawer>
@@ -201,7 +223,7 @@ export function CountryDetail({
           <SheetDescription className="sr-only">Entry details</SheetDescription>
         </SheetHeader>
         {result && (
-          <Body r={result} warning={warning} isHome={isHome} passport={passport} documents={documents} />
+          <Body r={result} warning={warning} apply={apply} isHome={isHome} passport={passport} documents={documents} />
         )}
       </SheetContent>
     </Sheet>

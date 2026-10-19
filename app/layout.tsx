@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 
@@ -20,15 +20,21 @@ const description =
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Visa Unlock",
+  title: "Laissez",
   description,
-  icons: { icon: [{ url: "/favicon.ico", type: "image/x-icon" }] },
   alternates: { canonical: "/" },
-  openGraph: { title: "Visa Unlock", description, type: "website", url: SITE_URL },
+  openGraph: { title: "Laissez", description, type: "website", url: SITE_URL },
   twitter: { card: "summary_large_image" },
 };
 
-export const viewport = { width: "device-width", initialScale: 1 };
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -38,7 +44,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <SiteHeader />
           {children}
           <SiteFooter />
-          <Analytics />
+          {/* /_vercel/insights only exists on Vercel; elsewhere it would 404 on
+              every page and the nosniff header would (rightly) refuse it. */}
+          {process.env["VERCEL"] && <Analytics />}
         </ThemeProvider>
       </body>
     </html>

@@ -1,39 +1,50 @@
 "use client";
 
 import { useEffect } from "react";
+import { errorDigest } from "@/lib/error-digest";
 
-export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function Error({ error, retry }: { error: unknown; retry: () => void }) {
+  const digest = errorDigest(error);
+
   useEffect(() => {
     console.error(error);
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn&apos;t load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={reset}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          {/* A full document load is the reliable way out of a crashed
-              client tree, so this stays an anchor rather than next/link. */}
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
-        </div>
+    <main className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24">
+      <p className="text-caption uppercase tracking-wide text-muted-foreground">Something went wrong</p>
+      <h1 className="mt-3 text-display">This page didn&apos;t load</h1>
+      <p className="mt-4 text-[21px] leading-snug text-muted-foreground">
+        That&apos;s on our side, not yours. Trying again usually fixes it.
+      </p>
+
+      <div className="mt-10 flex flex-wrap gap-3">
+        <button
+          type="button"
+          // retry() re-fetches the segment before re-rendering it, so a
+          // transient server failure can actually recover.
+          onClick={() => retry()}
+          className="inline-flex h-12 items-center rounded-full bg-primary px-6 text-primary-foreground"
+        >
+          Try again
+        </button>
+        {/* A full document load is the reliable way out of a crashed client
+            tree, so this stays an anchor rather than next/link. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a
+          href="/"
+          className="inline-flex h-12 items-center rounded-full border border-border bg-card px-6 transition-colors hover:bg-secondary"
+        >
+          Go home
+        </a>
       </div>
-    </div>
+
+      {digest && (
+        <p className="mt-10 text-caption text-muted-foreground">
+          If it keeps happening, quote reference <span className="tnum font-medium">{digest}</span>{" "}
+          when you report it.
+        </p>
+      )}
+    </main>
   );
 }

@@ -8,7 +8,11 @@ export const docTypeLabel: Record<DocType, string> = {
   permanent_residence: "Permanent residence",
 };
 
-/** The presets from the design, unchanged. `slug` is derived from the label. */
+/**
+ * The presets from the design, except that "EU residence permit" became
+ * "Schengen residence permit": nearly every rule names Schengen, and the EU
+ * code alone unlocked about five countries. `slug` is derived from the label.
+ */
 const PRESETS: readonly { label: string; doc: HeldDocument }[] = [
   { label: "US visa", doc: { issuer: "USA", type: "visa" } },
   { label: "UK visa", doc: { issuer: "GBR", type: "visa" } },
@@ -19,7 +23,7 @@ const PRESETS: readonly { label: string; doc: HeldDocument }[] = [
   { label: "US green card", doc: { issuer: "USA", type: "permanent_residence" } },
   { label: "Canada PR", doc: { issuer: "CAN", type: "permanent_residence" } },
   { label: "UK residence permit", doc: { issuer: "GBR", type: "residence_permit" } },
-  { label: "EU residence permit", doc: { issuer: "EU", type: "residence_permit" } },
+  { label: "Schengen residence permit", doc: { issuer: "SCHENGEN", type: "residence_permit" } },
   { label: "UAE residence permit", doc: { issuer: "ARE", type: "residence_permit" } },
 ];
 

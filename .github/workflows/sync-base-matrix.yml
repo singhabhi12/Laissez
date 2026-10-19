@@ -1,9 +1,11 @@
 name: Sync base matrix
 
+# Manual only. The base matrix is now imorte's passport-index-data (Feb 2026)
+# plus hand-researched corrections to Oct 2026, and this job still compares
+# against ilyankou's CSV: a scheduled run would open a PR reverting thousands of
+# researched cells. Re-enable a schedule once the upstream source and a way to
+# keep the corrections are settled.
 on:
-  schedule:
-    # 06:00 UTC on the 1st of every month.
-    - cron: "0 6 1 * *"
   workflow_dispatch:
 
 permissions:

@@ -1,6 +1,7 @@
 import type { EnrichedCountry, Region } from "./enrich";
 import type { PresetGain } from "../next-visa";
 import type {
+  ApplyInfo,
   BaseRequirement,
   Coverage,
   DocType,
@@ -47,6 +48,7 @@ export interface RulesFile {
   territory_rules: TerritoryRule[];
   warnings: Warning[];
   coverage: Coverage;
+  apply: Record<string, ApplyInfo>;
 }
 
 /** public/data/passports/{ISO3}.json */

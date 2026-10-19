@@ -3,13 +3,13 @@ import { loadShared } from "@/lib/data/load.server";
 import { BASE_MATRIX_CREDIT, DISCLAIMER } from "@/lib/legal";
 
 const description =
-  "Where Visa Unlock's entry rules come from, how confident we are, and the limits.";
+  "Where Laissez's entry rules come from, how confident we are, and the limits.";
 
 export const metadata: Metadata = {
-  title: "About the data · Visa Unlock",
+  title: "About the data · Laissez",
   description,
   alternates: { canonical: "/about" },
-  openGraph: { title: "About the data · Visa Unlock", description, type: "website" },
+  openGraph: { title: "About the data · Laissez", description, type: "website" },
 };
 
 const fmt = (iso: string) =>
